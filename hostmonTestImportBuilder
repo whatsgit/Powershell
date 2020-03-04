@@ -1,0 +1,109 @@
+Function Get-FileName($initialDirectory)
+    {  
+        Add-Type -AssemblyName System.Windows.Forms | Out-Null
+
+            $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+            $OpenFileDialog.initialDirectory = $initialDirectory
+            $OpenFileDialog.ShowDialog() | Out-Null
+            $OpenFileDialog.filename
+    }
+
+#Get Feed File 
+$pathToFeedFile = Get-FileName -initialDirectory “c:\Users\$env:USERNAME\Desktop\”
+
+#folder structure content
+<>REDACTED FOR PRIVACY<>
+
+#present folder structure
+$folders = @( 
+    "$topf\$itef\$whtf\$winf",
+    "$topf\$itef\$whtf\$winf\$prdf",
+    "$topf\$itef\$whtf\$winf\$nprdf",
+    "$topf\$itef\$whtf\$hostf",
+    "$topf\$itef\$whtf\$hostf\$prdf",
+    "$topf\$itef\$whtf\$hostf\$nprdf",
+    "$topf\$itef\$whtf\$appf",
+    "$topf\$itef\$whtf\$appf\$prdf",
+    "$topf\$itef\$whtf\$appf\$nprdf",
+    "$topf\$itef\$epicf",
+    "$topf\$itef\$epicf\$appf",
+    "$topf\$itef\$epicf\$appf\$prdf",
+    "$topf\$itef\$epicf\$hostf",
+    "$topf\$itef\$epicf\$hostf\$prdf",
+    "$topf\$itef\$epicf\$winf",
+    "$topf\$itef\$epicf\$winf\$prdf",
+    "$topf\$itef\$epicf\$mdevf",
+    "$topf\$itef\$rof",
+    "$topf\$itef\$rof\$hostf",
+    "$topf\$itef\$rof\$osf",
+    "$topf\$itef\$rof\$svcf",
+    "$topf\$itef\$rof\$winf",
+    "$topf\$itef\$rof\$winf\$drf",
+    "$topf\$itef\$rof\$winf\$onprdf",
+    "$topf\$itef\$rof\$winf\$prdf"
+            )
+
+$count = 1
+foreach($i in $folders){
+    Write-Host "["($count)"]" $i
+    $count++
+}
+
+#[int]$folderSelection = Read-Host -Prompt "Enter the number next to the folder you wish to place tests in..."
+do{
+    try{
+        $numOK = $true
+        [int]$folderSelection = Read-Host -Prompt "Enter the number next to the folder you wish to place tests in..."
+    }
+    catch{$numOK = $false}
+}until($folderSelection -ge 1 -and $folderSelection -le $folders.count -and $numOK)
+$folPath = $folders[$folderSelection - 1]
+$testNo = 1
+
+#Criticallity Selection
+do{
+    try{
+        $fsOK = $true
+        Write-Output "Are these servers for (P)roduction or (N)on-Prod"
+        $criticalitySelection = Read-Host -Prompt "Press (P) for Prodcution or (N) for Non-Prod..."
+    }
+    catch {$fsOK = $false}
+}
+until($criticalitySelection -like 'p' -or $criticalitySelection -like 'n' -and $fsOK)
+If ($criticalitySelection -eq 'p'){
+    $diskAlert = "WHT - Non Production Critical Alerts - Disk"
+    $pingAlert = "WHT - Non Production Critical Alerts - Ping"
+}else {
+    $diskAlert = "WHT - Non Production Critical Alerts - Ping"
+    $pingAlert = "WHT - Non Production Critical Alerts - Disk"
+}
+$outFile = "C:\Users\$env:USERNAME\Desktop\hostmonImport $(get-date -f yyyy-MM-dd).txt"
+$headerText = ";-----------------------------------------------------------------------------`n;- HostMonitor`s export/import file                                           -`n;- Trey's Lazy Test File Maker $(get-date -f yyyy-MM-dd)                                    -`n;- Please Make sure you know what you are doing and don't blame me.          -`n;- This Creates an Import file to mass create similar tests in hostmon/RCC.  -`n;-----------------------------------------------------------------------------`n`n"
+$headerText | Out-File -FilePath $outFile -NoClobber -Append
+do{
+    try{
+        $tsOK = $true
+        Write-Output "Do you wish to setup Pings test only or Ping and Disk Utilization% tests?"
+        $testTypes = Read-Host -Prompt "For Ping only enter (P) for Disk Utilization and Ping enter (B) for both."
+    }
+    catch {$tsOK = $false}
+}
+until($testTypes -like 'p' -or $testTypes -like 'b' -and $tsOK)
+
+#process feed file
+Get-Content -Path $pathToFeedFile | ForEach-Object {
+
+#output import file
+if ($testTypes -eq "p"){ 
+        $pingAlertText = "; ------- Test # $testNo -------`n`n`nMethod      = Ping`n;--- Common properties ---`nDestFolder  = $folPath`nTitle       = $_ Ping`nComment     = Ping $_`nRelatedURL  = `nNamePattern = %host% %methodname%`nCmntPattern = Ping %host%`nScheduleMode= Regular`nSchedule    = 7 Days, 24 Hours`nInterval    = 900`nAlerts      = $pingAlert`nReverseAlert= No`nUnknownIsBad= No`nWarningIsBad= Yes`nUseCommonLog= Yes`nPrivLogMode = Default`nCommLogMode = Default`n;--- Test specific properties ---`nHost        = $_ `nTimeout     = 2000`nRetries     = 4`nMaxLostRatio= 100`nDefJitter   = 100`nDisplayMode = time`nDontFragment= No`n`n"
+        $pingAlertText | Out-File -FilePath $outFile -Append
+        $testNo++
+    }else{
+        $pingAlertText = "; ------- Test # $testNo -------`n`n`nMethod      = Ping`n;--- Common properties ---`nDestFolder  = $folPath`nTitle       = $_ Ping`nComment     = Ping $_`nRelatedURL  = `nNamePattern = %host% %methodname%`nCmntPattern = Ping %host%`nScheduleMode= Regular`nSchedule    = 7 Days, 24 Hours`nInterval    = 900`nAlerts      = $pingAlert`nReverseAlert= No`nUnknownIsBad= No`nWarningIsBad= Yes`nUseCommonLog= Yes`nPrivLogMode = Default`nCommLogMode = Default`n;--- Test specific properties ---`nHost        = $_ `nTimeout     = 2000`nRetries     = 4`nMaxLostRatio= 100`nDefJitter   = 100`nDisplayMode = time`nDontFragment= No`n`n"
+        $pingAlertText | Out-File -FilePath $outFile -Append
+        $testNo++
+        $diskAlertText = "; ------- Test # $testNo -------`n`nMethod      = DriveSpace`n;--- Common properties ---`nDestFolder  = $folPath`nTitle       = $_ Free space: local`nComment     = local`nRelatedURL  = `nNamePattern = %host% Free space: %path%`nCmntPattern = %path%`nScheduleMode= Regular`nSchedule    = 7 Days, 24 Hours`nInterval    = 3600`nAlerts      = $diskAlert`nReverseAlert= No`nUnknownIsBad= Yes`nWarningIsBad= Yes`nUseCommonLog= Yes`nPrivLogMode = Default`nCommLogMode = Default`nSyncCounters= Yes`nSyncAlerts  = No`nDependsOn   = list`nMasterTest-Alive = $_ Ping`n;--- Test specific properties ---`nServer      = $_`nDriveList   = C: D: F: M:`nCheckByList = No`nCheckLocals = Yes`nCheckRemovable= No`nMinFreeSpace= 5%`n`n"
+        $diskAlertText | Out-File -FilePath $outFile -Append
+        $testNo++
+    }
+}
