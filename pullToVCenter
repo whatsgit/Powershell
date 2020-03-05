@@ -1,0 +1,38 @@
+<# Create function folder dialog #>
+Function Get-FileName($initialDirectory)
+    {  
+        Add-Type -AssemblyName System.Windows.Forms | Out-Null
+
+            $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+            $OpenFileDialog.initialDirectory = $initialDirectory
+            $OpenFileDialog.ShowDialog() | Out-Null
+            $OpenFileDialog.filename
+    }
+
+<# Prompts user with folder dialog to select the text file they have the lists of hosts to import in #>
+$VCToConnect = Read-Host -Prompt 'Please enter the fqdn of the vCenter server you wish to connect to...'
+
+<# Connects the vCenter prompts for your credentials#>
+Connect-VIServer $VCToConnect
+
+<# Opens the folder dialog to declare the list of hosts to import #>
+$pathToHostList = Get-FileName -initialDirectory “c:\Users\$env:USERNAME\Desktop\”
+
+<# Defines which datacenter on current vCenter to put hosts in #>
+$datacenterToPopulate = Read-Host -Prompt 'Please enter the datacenter you wish to place the hosts in...'
+
+
+<#The next section makes the user name and pass for the hosts secure and makes this script portable so that the credentials are being thrown around in plaintext or hard coded into the script#>
+<# ESX host root username #>
+$hostUser = Read-Host -Prompt "Enter the host admin username..." -AsSecureString
+<# Secure the username #>
+$secUser = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($hostUser))
+<# ESX host root user password #>
+$hostUserPass = Read-Host -Prompt "Enter the password for host..." -AsSecureString
+<# Decrypt the password #>
+$secPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($hostUserPass))
+
+<#This ssection pulls in the list of hosts to add to vCenter and pipes them into a foreach loop#>
+Get-Content -Path $pathToHostList |
+    <#Adds the host to the datacenter for the connected vCenter#>
+    Foreach-Object { Add-VMHost $_ -Location (Get-Datacenter $datacenterToPopulate) -User $secUser -Password $secPassword -RunAsync -force:$true}
