@@ -1,18 +1,3 @@
-<#
-.SYNOPSIS
-	This creates a text file for the monitoring system that can be used for bulk import/creation
-.DESCRIPTION
-    This will create the import file for a single folder level at a time.
-    The file you are prompted for is a text file of host names.
-    
-.NOTES
-	File Namespace	: hostmonTestImportBuilder.ps1
-	Author			: Trey Joiner
-	Version			: 1.0
-    Last Modified	: 03/04/2020
-.LINK
-    https://github.com/whatsgit/Powershell/blob/master/hostmonTestImportBuilder
-#>
 Function Get-FileName($initialDirectory)
     {  
         Add-Type -AssemblyName System.Windows.Forms | Out-Null
