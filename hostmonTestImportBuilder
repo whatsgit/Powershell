@@ -27,21 +27,7 @@ Function Get-FileName($initialDirectory)
 $pathToFeedFile = Get-FileName -initialDirectory “c:\Users\$env:USERNAME\Desktop\”
 
 #folder structure content
-$topf="MDACC"
-$itef="IT Engineering"
-$whtf="Windows Hosting Team"
-$winf="Windows"
-$hostf="ESX"
-$appf="Appliances"
-$prdf="Prod"
-$nprdf="NonProd"
-$epicf="Epic/VDI"
-$mdevf="MDADEV.org"
-$rof="RadOnc"
-$osf="Open System"
-$svcf="Services"
-$drf="DR"
-$onprdf="Non-Prod"
+<Redacted for Privacy>
 
 #present folder structure
 $folders = @( 
