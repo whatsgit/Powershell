@@ -1,3 +1,18 @@
+<#
+.SYNOPSIS
+	This creates a text file for the monitoring system that can be used for bulk import/creation
+.DESCRIPTION
+    This will create the import file for a single folder level at a time.
+    The file you are prompted for is a text file of host names.
+    
+.NOTES
+	File Namespace	: hostmonTestImportBuilder.ps1
+	Author			: Trey Joiner
+	Version			: 1.0
+    Last Modified	: 03/04/2020
+.LINK
+    https://github.com/whatsgit/Powershell/blob/master/hostmonTestImportBuilder
+#>
 Function Get-FileName($initialDirectory)
     {  
         Add-Type -AssemblyName System.Windows.Forms | Out-Null
@@ -12,7 +27,21 @@ Function Get-FileName($initialDirectory)
 $pathToFeedFile = Get-FileName -initialDirectory “c:\Users\$env:USERNAME\Desktop\”
 
 #folder structure content
-<>REDACTED FOR PRIVACY<>
+$topf="MDACC"
+$itef="IT Engineering"
+$whtf="Windows Hosting Team"
+$winf="Windows"
+$hostf="ESX"
+$appf="Appliances"
+$prdf="Prod"
+$nprdf="NonProd"
+$epicf="Epic/VDI"
+$mdevf="MDADEV.org"
+$rof="RadOnc"
+$osf="Open System"
+$svcf="Services"
+$drf="DR"
+$onprdf="Non-Prod"
 
 #present folder structure
 $folders = @( 
@@ -77,7 +106,8 @@ If ($criticalitySelection -eq 'p'){
     $diskAlert = "WHT - Non Production Critical Alerts - Ping"
     $pingAlert = "WHT - Non Production Critical Alerts - Disk"
 }
-$outFile = "C:\Users\$env:USERNAME\Desktop\hostmonImport $(get-date -f yyyy-MM-dd).txt"
+#$(get-date -f yyyy-MM-dd)
+$outFile = "C:\Users\$env:USERNAME\Desktop\hostmonImport.HMI"
 $headerText = ";-----------------------------------------------------------------------------`n;- HostMonitor`s export/import file                                           -`n;- Trey's Lazy Test File Maker $(get-date -f yyyy-MM-dd)                                    -`n;- Please Make sure you know what you are doing and don't blame me.          -`n;- This Creates an Import file to mass create similar tests in hostmon/RCC.  -`n;-----------------------------------------------------------------------------`n`n"
 $headerText | Out-File -FilePath $outFile -NoClobber -Append
 do{
@@ -107,3 +137,11 @@ if ($testTypes -eq "p"){
         $testNo++
     }
 }
+
+#Replace all `n newline characters to the `r`n format hostmon expects, otherwise test import file presents as invalid. This causes an issue as of 3/20/20 not sure what changed in either powershell or hostmon.
+(Get-Content -Raw -Path $outFile) -replace "`n","`r`n" | Set-Content -Path $outFile -NoNewline
+
+#sleep to allow time for replacement
+write-host "Processing file . . . " -foregroundcolor Yellow
+start-sleep -seconds 15
+write-host "Processing Complete . . . " -foregroundcolor Green
